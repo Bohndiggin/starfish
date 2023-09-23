@@ -2,7 +2,7 @@ import random
 import pygame
 from variables import *
 import math
-
+import numpy as np
 
 
 class Star:
@@ -25,7 +25,9 @@ class Star:
         self.min_placement_distance = (0.005 * AU) * (self.temperature / solar_temp)
         self.max_placement_distance = (7 * AU) * (self.temperature / solar_temp)
         self.screen = screen
-        self.position = pygame.Vector2(500, 500)
+        self.x_location = pygame.display.get_desktop_sizes()[0][0]/2
+        self.y_location = pygame.display.get_desktop_sizes()[0][1]/2
+        self.position = pygame.Vector2(self.x_location, self.y_location)
         pygame.draw.circle(self.screen, "red", self.position, 40*zoom_scale)
 
     def calculate_habitable_zone(self):
@@ -65,16 +67,17 @@ class Planet:
         self.gravity_relative_to_earth = (self.mass/earth_mass) / (self.radius / earth_radius) ** 2
         self.mean_anomaly = math.radians(random.randint(0, 360))# - self.eccentricity * math.sin(math.radians(0))
         self.current_distance = self.semi_major_axis
-        self.offset = pygame.display.get_window_size()[1]/2
-        self.x_location = 500
-        self.y_location = 500
-        self.position = pygame.Vector2(self.x_location, self.y_location)
+        self.offset = [pygame.display.get_desktop_sizes()[0][0]/2, pygame.display.get_desktop_sizes()[0][1]/2]
+        self.x_location = pygame.display.get_desktop_sizes()[0][0]/2
+        self.y_location = pygame.display.get_desktop_sizes()[0][1]/2
+        self.position = pygame.Vector2(self.offset[0], self.offset[1])
         self.screen = screen
         self.orbit_length = self.orbital_period * self.velocity
         self.eccentric_anomaly = self.get_eccentric_anomaly()
         self.true_anomaly = math.radians(0)
         self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        pygame.draw.circle(screen, self.color, self.position, 40)
+        self.draw_size = 40*zoom_scale*(self.radius/earth_radius)
+        self.position_vector = PositionVector(self.current_distance, self.true_anomaly)
 
 
     def temperature_get(self, distance):
@@ -137,12 +140,12 @@ class Planet:
         self.y_location_perifocal = self.current_distance * math.sin(self.true_anomaly)
         self.x_location = self.x_location_perifocal * math.cos(self.argument_of_perigee) - self.y_location_perifocal * math.sin(self.argument_of_perigee) #* unreal_factor * AU
         self.y_location = self.x_location_perifocal * math.sin(self.argument_of_perigee) + self.y_location_perifocal * math.cos(self.argument_of_perigee) #* unreal_factor * AU
-        self.y_location = (self.y_location / AU * unreal_factor) * zoom_scale + self.offset
-        self.x_location = (self.x_location / AU * unreal_factor) * zoom_scale + self.offset
+        self.y_location = (self.y_location / AU * unreal_factor) * zoom_scale + self.offset[1]
+        self.x_location = (self.x_location / AU * unreal_factor) * zoom_scale + self.offset[0]
         
         self.position.x = self.x_location
         self.position.y = self.y_location
-        pygame.draw.circle(self.screen, self.color, self.position, 40*zoom_scale* (self.radius/earth_radius))
+        pygame.draw.circle(self.screen, self.color, self.position, self.draw_size)
         # print(self.x_location)
         # print(self.y_location)
         # print(self.current_speed)

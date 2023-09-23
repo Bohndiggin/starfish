@@ -1,3 +1,4 @@
+import math
 G = 6.67384 * 10 ** -11
 g_units = "m^3kg^-1s^-2"
 speed_of_light = 299792458
@@ -75,7 +76,7 @@ temperature_array_rocky = [
     PlanetTypes(300, k_boiling_point, 'rocky desert-world'),
     PlanetTypes(k_boiling_point, 450, 'rocky boiling'),
     PlanetTypes(450, 600, 'lava-world'),
-    PlanetTypes(600, 9999999, 'hell-world')
+    PlanetTypes(600, math.inf, 'hell-world')
 ]
 
 temperature_array_icy = [
@@ -97,5 +98,20 @@ temperature_array_metalic = [
     PlanetTypes(k_boiling_point, 450, 'metalic boiling'),
     PlanetTypes(450, 600, 'stovetop'),
     PlanetTypes(600, 1200, 'oven-world'),
-    PlanetTypes(1200, 99999999, 'tartarus')
+    PlanetTypes(1200, math.inf, 'tartarus')
 ]
+
+class PositionVector:
+    def __init__(self, radius:float, true_anomaly:math.radians) -> None:
+        self.radius = radius
+        self.true_anomaly = true_anomaly
+
+    def __repr__(self) -> str:
+        return f'r: {self.radius}, theta: {self.true_anomaly}'
+    
+class Km: #TODO make a value / unit class that can be added and junk
+    def __init__(self, km:int) -> None:
+        self.km = km
+
+    def __repr__(self) -> str:
+        return f'{self.km} Km'

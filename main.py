@@ -2,7 +2,9 @@ import pygame
 from utils import *
 
 pygame.init()
-screen = pygame.display.set_mode((pygame.display.get_desktop_sizes()[0][0], pygame.display.get_desktop_sizes()[0][1]), flags=pygame.SCALED)
+width = pygame.display.get_desktop_sizes()[0][0]
+height = pygame.display.get_desktop_sizes()[0][1]
+screen = pygame.display.set_mode((width, height), flags=pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 running = True
 dt = 0
