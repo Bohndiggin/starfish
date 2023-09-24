@@ -102,12 +102,38 @@ temperature_array_metalic = [
 ]
 
 class PositionVector:
-    def __init__(self, radius:float, true_anomaly:math.radians) -> None:
-        self.radius = radius
+    def __init__(self, position_x:float, position_y:float, true_anomaly:math.radians) -> None:
+        self.position_x = position_x
+        self.position_y = position_y
+        self.true_anomaly = true_anomaly
+
+    def set_position(self, position_x:float, position_y:float, true_anomaly:math.radians):
+        self.position_x = position_x
+        self.position_y = position_y
+        self.true_anomaly = true_anomaly
+
+    def calculate_distance(self, other_position):
+        displacement_vector = [
+            (self.position_x - other_position.position_X),
+            (self.position_y - other_position.position_y)
+            ]
+        distance = math.sqrt(displacement_vector[0]**2 + displacement_vector[1]**2)
+        return distance
+
+    def __repr__(self) -> str:
+        return f'coordinates: {self.position}, true_anomaly: {self.true_anomaly}'
+
+class VelocityVector:
+    def __init__(self, velocity:float, true_anomaly:math.radians) -> None:
+        self.velocity = velocity
+        self.true_anomaly = true_anomaly
+
+    def set_velocity(self, velocity:float, true_anomaly:math.radians):
+        self.velocity = velocity
         self.true_anomaly = true_anomaly
 
     def __repr__(self) -> str:
-        return f'r: {self.radius}, theta: {self.true_anomaly}'
+        return f'velocity: {self.velocity}, true_anomaly: {self.true_anomaly}'
     
 class Km: #TODO make a value / unit class that can be added and junk
     def __init__(self, km:int) -> None:

@@ -41,7 +41,7 @@ class Star:
 class Planet:
     def __init__(self, screen, star_orbiting:Star) -> None:
         self.star_orbiting = star_orbiting
-        self.eccentricity = random.uniform(0.001, 0.999)
+        self.eccentricity = (random.betavariate(2, 5) * 0.999)#random.uniform(0.001, 0.999)
         self.radius = random.uniform(600, 9999) # placeholder???
         self.composition = self.calculate_body_composition()
         self.mass = self.calculate_body_mass()
@@ -77,7 +77,9 @@ class Planet:
         self.true_anomaly = math.radians(0)
         self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.draw_size = 40*zoom_scale*(self.radius/earth_radius)
-        self.position_vector = PositionVector(self.current_distance, self.true_anomaly)
+        self.position_vector = PositionVector(0, 0, self.true_anomaly)
+        self.velocity_vector = VelocityVector(self.current_speed, self.true_anomaly)
+        self.sphere_of_influence = float
 
 
     def temperature_get(self, distance):
@@ -133,16 +135,17 @@ class Planet:
         self.big_b = self.eccentricity / (1 + math.sqrt(1 - self.eccentricity ** 2))
         self.true_anomaly = self.eccentric_anomaly + 2*math.atan((self.big_b*math.sin(self.eccentric_anomaly)) / (1-self.big_b*math.cos(self.eccentric_anomaly)))
         self.current_distance = (self.semi_major_axis * (1 - self.eccentricity**2)) / (1+self.eccentricity * math.cos(self.true_anomaly))
-        self.current_speed = ((math.sqrt(self.sgp * ((2/self.current_distance)-(1/self.semi_major_axis))))) * unreal_factor / 5
+        self.current_speed = ((math.sqrt(self.sgp * ((2/self.current_distance)-(1/self.semi_major_axis)))))
         # self.true_anomaly = 2 * math.atan(math.sqrt(1+self.eccentricity/1-self.eccentricity) * math.tan(self.eccentric_anomaly/2))
-        self.mean_anomaly += time_period / 10
+        self.mean_anomaly += (self.current_speed / self.orbit_length) * unreal_factor * 10 * AU
         self.x_location_perifocal = self.current_distance * math.cos(self.true_anomaly)
         self.y_location_perifocal = self.current_distance * math.sin(self.true_anomaly)
         self.x_location = self.x_location_perifocal * math.cos(self.argument_of_perigee) - self.y_location_perifocal * math.sin(self.argument_of_perigee) #* unreal_factor * AU
         self.y_location = self.x_location_perifocal * math.sin(self.argument_of_perigee) + self.y_location_perifocal * math.cos(self.argument_of_perigee) #* unreal_factor * AU
         self.y_location = (self.y_location / AU * unreal_factor) * zoom_scale + self.offset[1]
         self.x_location = (self.x_location / AU * unreal_factor) * zoom_scale + self.offset[0]
-        
+        self.position_vector.set_position(self.x_location, self.y_location, self.true_anomaly)
+        self.velocity_vector.set_velocity(self.current_speed, self.true_anomaly)
         self.position.x = self.x_location
         self.position.y = self.y_location
         pygame.draw.circle(self.screen, self.color, self.position, self.draw_size)
@@ -168,6 +171,18 @@ class Planet:
         # for i in range(10000):
         #     E = self.mean_anomaly + self.eccentricity * math.sin(E)
         # return E
+    def two_body_check(self, planet_list:list): # we'll want to give each body a radius of significant influence so we can know if we should run calculations or not
+        for i in planet_list:
+            distance = self.distance_to_other_body(i)
+            if distance < i.sphere_of_influence or distance < self.sphere_of_influence:
+                self.two_body_calculation(self, i)
+
+    def distance_to_other_body(self, other_planet):
+        distance = self.position_vector.calculate_distance(other_planet.position_vector)
+        return distance
+
+    def two_body_calculation(self, other_planet): 
+        pass
 
 def make_sgp(mass1, mass2) -> float:
     return G * (mass1 + mass2)

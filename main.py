@@ -14,10 +14,11 @@ star1 = Star(screen=screen, temperature=5700, mass=1)
 # planet2 = Planet(screen, star1)
 planet_list = []
 
-def add_planets(num):
-    planet_list.append(Planet(screen, star1))
+def add_planets(num:int):
+    for i in range(num):
+        planet_list.append(Planet(screen, star1))
 
-add_planets(1)
+add_planets(60)
 
 while running:
     # poll for events
@@ -34,11 +35,12 @@ while running:
     for i in planet_list:
         i.update_location()
 
-    if len(planet_list) < 600:
-        add_planets(1)
+    # if len(planet_list) < 60:
+    #     add_planets(1)
     # add_planets(1)
     # print(len(planet_list), "planets")
     # print(int(clock.get_fps()))
+    # print(planet_list[0].true_anomaly)
 
     # flip() the display to put your work on screen
     pygame.display.flip()
