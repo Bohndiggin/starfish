@@ -50,7 +50,7 @@ class StarTypes:
 
 star_type_array = [
     StarTypes(30000, 1000000, 'O', 16, 20, 6.6, 8, 30000, 50000, 0.03),
-    StarTypes(10000, 30000, 'B', 2.1, 16, 1.8, 6.6, 30000, 25, 0.25),
+    StarTypes(10000, 30000, 'B', 2.1, 16, 1.8, 6.6, 25, 30000, 0.25),
     StarTypes(7500, 10000, 'A', 1.4, 2.1, 1.4, 1.8, 5, 25, 0.85),
     StarTypes(6000, 7500, 'F', 1.04, 1.4, 1.15, 1.4, 1.5, 5, 3.85),
     StarTypes(5200, 6000, 'G', 0.8, 1.04, 0.96, 1.15, 0.6, 1.5, 10),
@@ -112,9 +112,19 @@ class PositionVector:
         self.position_y = position_y
         self.true_anomaly = true_anomaly
 
-    def calculate_distance(self, other_position):
+    def increment_position(self, velocity_vector:'VelocityVector', true_anomaly:math.radians):
+        self.position_x += velocity_vector.displacement_x
+        self.position_y += velocity_vector.displacement_y
+        self.true_anomaly = true_anomaly
+
+    def to_list(self) -> list:
+        final_position_x = self.position_x / unreal_factor * zoom_scale + 1280
+        final_position_y = self.position_y / unreal_factor * zoom_scale + 720
+        return [final_position_x, final_position_y]
+        
+    def calculate_distance(self, other_position:'PositionVector'):
         displacement_vector = [
-            (self.position_x - other_position.position_X),
+            (self.position_x - other_position.position_x),
             (self.position_y - other_position.position_y)
             ]
         distance = math.sqrt(displacement_vector[0]**2 + displacement_vector[1]**2)
@@ -124,13 +134,19 @@ class PositionVector:
         return f'coordinates: {self.position}, true_anomaly: {self.true_anomaly}'
 
 class VelocityVector:
-    def __init__(self, velocity:float, true_anomaly:math.radians) -> None:
+    def __init__(self, velocity:float, direction:math.radians) -> None:
         self.velocity = velocity
-        self.true_anomaly = true_anomaly
+        self.direction = direction
+        # print(self.direction)
+        self.displacement_x = self.velocity * math.cos(self.direction) - self.velocity * math.sin(self.direction)
+        self.displacement_y = self.velocity * math.sin(self.direction) + self.velocity * math.cos(self.direction)
 
-    def set_velocity(self, velocity:float, true_anomaly:math.radians):
+    def set_velocity(self, velocity:float, direction:math.radians, argument_of_periapsis):
         self.velocity = velocity
-        self.true_anomaly = true_anomaly
+        self.direction = direction
+        # print(self.direction)
+        self.displacement_x = self.velocity * math.cos(self.direction) - self.velocity * math.sin(self.direction)
+        self.displacement_y = self.velocity * math.sin(self.direction) + self.velocity * math.cos(self.direction)
 
     def __repr__(self) -> str:
         return f'velocity: {self.velocity}, true_anomaly: {self.true_anomaly}'

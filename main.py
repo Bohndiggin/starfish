@@ -35,16 +35,15 @@ while running:
     for i in planet_list:
         i.update_location()
 
-    # if len(planet_list) < 60:
-    #     add_planets(1)
-    # add_planets(1)
-    # print(len(planet_list), "planets")
-    # print(int(clock.get_fps()))
-    # print(planet_list[0].true_anomaly)
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_w]:
+        planet_list[0].perturb()
+
 
     # flip() the display to put your work on screen
     pygame.display.flip()
 
-    dt = clock.tick(144) / 1000  # limits FPS to 60
+    dt = clock.tick(60) / 1000  # limits FPS to 60
 
 pygame.quit()

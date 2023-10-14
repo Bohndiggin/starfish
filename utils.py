@@ -63,7 +63,7 @@ class Planet:
         self.max_temperature = self.temperature_get(self.apoapsis) + 37 * self.atmosphere
         self.calculate_ice_blast()
         self.f = self.semi_major_axis * self.eccentricity
-        self.argument_of_perigee = random.uniform(0, 360) * math.pi / 180
+        self.argument_of_periapsis = random.uniform(0, 360) * math.pi / 180
         self.gravity_relative_to_earth = (self.mass/earth_mass) / (self.radius / earth_radius) ** 2
         self.mean_anomaly = math.radians(random.randint(0, 360))# - self.eccentricity * math.sin(math.radians(0))
         self.current_distance = self.semi_major_axis
@@ -77,9 +77,13 @@ class Planet:
         self.true_anomaly = math.radians(0)
         self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         self.draw_size = 40*zoom_scale*(self.radius/earth_radius)
-        self.position_vector = PositionVector(0, 0, self.true_anomaly)
+        self.position_vector = PositionVector(self.x_location, self.y_location, self.true_anomaly)
         # self.velocity_vector = VelocityVector(self.current_speed, self.true_anomaly)
         self.sphere_of_influence = float
+        self.reduced_mass = self.star_orbiting.mass*self.mass / (self.star_orbiting.mass+self.mass)
+        self.velocity_vector = VelocityVector(self.velocity, self.true_anomaly)
+        self.argument_of_latitude = 0
+        # self.direction = 0
 
 
     def temperature_get(self, distance):
@@ -130,22 +134,24 @@ class Planet:
             self.mass = self.calculate_body_mass()
             self.body_type = self.calculate_body_type()
 
-    def update_location(self):
+    def update_location(self): #eccentricity should not be changing unless ifluenced by outside force.
         self.eccentric_anomaly = self.get_eccentric_anomaly()
+        self.position_vector = np.array([self.x_location, self.y_location]) #when do I use vectors?
         self.big_b = self.eccentricity / (1 + math.sqrt(1 - self.eccentricity ** 2))
         self.true_anomaly = self.eccentric_anomaly + 2*math.atan((self.big_b*math.sin(self.eccentric_anomaly)) / (1-self.big_b*math.cos(self.eccentric_anomaly)))
         self.current_distance = (self.semi_major_axis * (1 - self.eccentricity**2)) / (1+self.eccentricity * math.cos(self.true_anomaly))
         self.current_speed = ((math.sqrt(self.sgp * ((2/self.current_distance)-(1/self.semi_major_axis)))))
-        self.orbital_energy = (self.current_speed**2 / 2) - (self.sgp / self.current_distance)
-        self.angular_momentum = self.mass * self.current_speed * self.semi_major_axis
-        self.eccentricity = math.sqrt(1 + ((2*self.orbital_energy * self.angular_momentum**2) / self.sgp))
+        self.orbital_energy = -(self.sgp/2*self.semi_major_axis) #(self.current_speed**2 / 2) - (self.sgp / self.current_distance)
+        # self.angular_momentum = self.mass * self.velocity * self.semi_major_axis
+        # self.eccentricity = math.sqrt(1 + ((2*(self.orbital_energy/self.reduced_mass) * (self.angular_momentum/self.reduced_mass)**2) / self.sgp))
+        # print(self.eccentricity)
         # self.true_anomaly = 2 * math.atan(math.sqrt(1+self.eccentricity/1-self.eccentricity) * math.tan(self.eccentric_anomaly/2))
         self.mean_anomaly += (self.current_speed / self.orbit_length) * unreal_factor * 10 * AU
         self.x_location_perifocal = self.current_distance * math.cos(self.true_anomaly)
         self.y_location_perifocal = self.current_distance * math.sin(self.true_anomaly)
-        self.x_location = self.x_location_perifocal * math.cos(self.argument_of_perigee) - self.y_location_perifocal * math.sin(self.argument_of_perigee) #* unreal_factor * AU
-        self.y_location = self.x_location_perifocal * math.sin(self.argument_of_perigee) + self.y_location_perifocal * math.cos(self.argument_of_perigee) #* unreal_factor * AU
-        self.position_vector.set_position(self.x_location, self.y_location, self.true_anomaly)
+        self.x_location = self.x_location_perifocal * math.cos(self.argument_of_periapsis) - self.y_location_perifocal * math.sin(self.argument_of_periapsis) #* unreal_factor * AU
+        self.y_location = self.x_location_perifocal * math.sin(self.argument_of_periapsis) + self.y_location_perifocal * math.cos(self.argument_of_periapsis) #* unreal_factor * AU
+        # self.position_vector.set_position(self.x_location, self.y_location, self.true_anomaly)
         # self.velocity_vector.set_velocity(self.current_speed, self.true_anomaly)
         self.y_location = (self.y_location / AU * unreal_factor) * zoom_scale + self.offset[1]
         self.x_location = (self.x_location / AU * unreal_factor) * zoom_scale + self.offset[0]
@@ -157,6 +163,26 @@ class Planet:
         # print(self.current_speed)
         # print(self.true_anomaly)
         self.update_temperature()
+
+    def update_location_vectors(self): #TODO switch to vectors so that planets can influence each other.
+        self.eccentric_anomaly = self.get_eccentric_anomaly()
+        self.big_b = self.eccentricity / (1 + math.sqrt(1 - self.eccentricity ** 2))
+        self.true_anomaly = self.eccentric_anomaly + 2*math.atan((self.big_b*math.sin(self.eccentric_anomaly)) / (1-self.big_b*math.cos(self.eccentric_anomaly)))
+        # print(f"True anomaly: {self.true_anomaly}")
+        self.argument_of_latitude = self.true_anomaly + self.argument_of_periapsis
+        self.current_distance = (self.semi_major_axis * (1 - self.eccentricity**2)) / (1+self.eccentricity * math.cos(self.true_anomaly))
+        self.current_speed = ((math.sqrt(self.sgp * ((2/self.current_distance)-(1/self.semi_major_axis)))))
+        self.orbital_energy = -(self.sgp/2*self.semi_major_axis) #(self.current_speed**2 / 2) - (self.sgp / self.current_distance)
+        # need to translate speed and direction into x and y
+        self.direction = self.true_anomaly
+        # print(self.direction)
+        self.velocity_vector.set_velocity(self.current_speed, self.direction, self.argument_of_periapsis)
+        self.position_vector.increment_position(self.velocity_vector, self.direction)
+        self.position.x, self.position.y = self.position_vector.to_list()
+        pygame.draw.circle(self.screen, self.color, self.position, self.draw_size)
+        self.mean_anomaly += (self.current_speed / self.orbit_length) * unreal_factor * AU * 10
+        self.update_temperature()
+        # print(self.position.x)
 
     def get_eccentric_anomaly(self):
         E = self.mean_anomaly
@@ -186,6 +212,16 @@ class Planet:
     
     def perturbation(self, other_planet):
         pass
+
+    def perturb(self):
+        a_per = 50
+        p = self.current_distance
+        ital_p = (self.semi_major_axis * self.eccentricity) + self.semi_major_axis
+        r = self.current_distance * 1.5
+        ital_r = ital_p * 1.5
+        u = self.sgp
+        funky_r = a_per + u * ((p/ital_p**3) - (r/ital_r**3))
+        self.semi_major_axis = funky_r
 
     def two_body_calculation(self, other_planet): 
         return
